@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="id">
+ <head>
+  <script src="/_sdk/telemetry_sdk.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoring Proyek Omah Songo</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'DM Sans', sans-serif; background-color: #1a0505; color: #fca5a5; }
+    .tab-active { background: #dc2626; color: #fff; }
+    .tab-inactive { background: #450a0a; color: #fca5a5; }
+    .canva-card { background-color: #2d0b0b; border: 1px solid #7f1d1d; }
+  </style>
+  <script src="/_sdk/resizing_sdk.js" type="text/javascript"></script>
+ </head>
+ <body data-template-id="__page-root" class="min-h-screen">
+  <header class="p-6 border-b border-red-900">
+   <h1 data-template-id="page-title" class="canva-text text-center text-2xl font-bold text-red-100">Monitoring Proyek Omah Songo</h1>
+   <p data-template-id="page-subtitle" class="canva-text text-center text-sm mt-1 text-red-400">Sistem Kendali Upah dan Progress Lapangan</p>
+  </header>
+  
+  <main class="max-w-5xl mx-auto p-4">
+   <nav class="flex gap-2 mb-6 flex-wrap">
+     <button id="tab-form" class="tab-active px-4 py-2 rounded-lg font-semibold transition" onclick="switchTab('form')">Form Input</button> 
+     <button id="tab-rekap" class="tab-inactive px-4 py-2 rounded-lg font-semibold transition" onclick="switchTab('rekap')">Rekap Perhitungan</button> 
+     <button id="tab-grafik" class="tab-inactive px-4 py-2 rounded-lg font-semibold transition" onclick="switchTab('grafik')">Grafik</button> 
+     <button id="tab-pengaturan" class="tab-inactive px-4 py-2 rounded-lg font-semibold transition" onclick="switchTab('pengaturan')">Pengaturan</button>
+   </nav>
+
+   <section id="section-form">
+    <div data-template-id="form-card" class="canva-card rounded-xl p-6">
+     <h2 data-template-id="form-title" class="canva-text text-xl font-bold mb-4 text-red-100">Input Data Harian Lapangan</h2>
+     <div class="mb-6">
+      <form id="monitoring-form" class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit="handleMonitoringSubmit(event)">
+        <input type="hidden" id="inp-id">
+        <div>
+         <label for="inp-tanggal" class="canva-text block mb-1 font-medium">Tanggal</label>
+         <input id="inp-tanggal" type="date" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <label id="label-nama" for="inp-nama" class="canva-text block mb-1 font-medium">Nama Pekerja</label>
+         <select id="inp-nama" required onchange="handleWorkerSelection(this.value)" class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+           <option value="">Pilih Nama Pekerja</option>
+         </select>
+        </div>
+        <div>
+         <label for="inp-status" class="canva-text block mb-1 font-medium">Sistem Pembayaran</label>
+         <select id="inp-status" class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+           <option value="Harian">Harian</option>
+           <option value="Borongan">Borongan</option>
+           <option value="Tetap">Tetap</option>
+         </select>
+        </div>
+        <div>
+         <label id="label-upah" for="inp-upah" class="canva-text block mb-1 font-medium">Upah Realisasi Harian (Rp)</label>
+         <input id="inp-upah" type="number" placeholder="0" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <label id="label-pekerjaan" for="inp-pekerjaan" class="canva-text block mb-1 font-medium">Jenis Pekerjaan</label>
+         <select id="inp-pekerjaan" required onchange="handleJobSelection(this.value)" class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+           <option value="">Pilih Pekerjaan</option>
+         </select>
+        </div>
+        <div>
+         <label id="label-opname" for="inp-opname" class="canva-text block mb-1 font-medium">Volume Capaian (Opname)</label>
+         <input id="inp-opname" type="number" step="0.01" placeholder="0" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <label for="inp-satuan" class="canva-text block mb-1 font-medium">Satuan Ukur</label>
+         <input id="inp-satuan" type="text" placeholder="Otomatis" class="w-full rounded-lg bg-red-900/40 border border-red-800 text-red-300 p-2 focus:outline-none" readonly>
+        </div>
+        <div>
+         <label for="inp-keterangan" class="canva-text block mb-1 font-medium">Catatan / Keterangan</label>
+         <input id="inp-keterangan" type="text" placeholder="Keterangan lapangan" class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div class="md:col-span-2">
+         <button id="submit-btn" type="submit" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold transition hover:bg-red-700 shadow-md">Simpan Data Monitor</button>
+        </div>
+      </form>
+      <div id="form-msg" class="mt-3 text-center text-sm hidden font-medium"></div>
+
+      <div class="mt-6 border-t border-red-800 pt-6">
+       <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+         <h3 class="canva-text font-semibold text-red-300">Histori Catatan Monitoring Lapangan</h3>
+         <button onclick="exportRealisasiToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-medium transition shadow">
+           <i data-lucide="file-spreadsheet" style="width:14px;height:14px"></i> Export Excel
+         </button>
+       </div>
+       <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+         <thead>
+          <tr class="border-b border-red-800 text-red-300 bg-red-950/50">
+           <th class="p-2 text-left">NO</th>
+           <th class="p-2 text-left">TANGGAL</th>
+           <th class="p-2 text-left">NAMA</th>
+           <th class="p-2 text-left">PEKERJAAN</th>
+           <th class="p-2 text-right">UPAH BALASAN</th>
+           <th class="p-2 text-right">VOLUME</th>
+           <th class="p-2 text-center">AKSI</th>
+          </tr>
+         </thead>
+         <tbody id="form-monitoring-body" class="text-red-100"></tbody>
+        </table>
+       </div>
+       <p id="form-monitoring-empty" class="text-red-400 text-center py-4 hidden">Belum ada data input</p>
+      </div>
+     </div>
+    </div>
+   </section>
+
+   <section id="section-rekap" class="hidden">
+    <div data-template-id="rekap-card" class="canva-card rounded-xl p-6">
+     <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+       <h2 id="rekap-harian-title" class="canva-text font-bold text-xl text-red-100">Rekapitulasi Perhitungan Per Pekerja</h2>
+       <button onclick="exportRekapToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-sm px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition shadow">
+         <i data-lucide="file-spreadsheet" style="width:16px;height:16px"></i> Export Rekap Excel
+       </button>
+     </div>
+     <div>
+      <div class="overflow-x-auto">
+       <table class="w-full text-sm">
+        <thead>
+         <tr class="border-b border-red-800 text-red-300 bg-red-950/50">
+          <th class="p-2 text-left">NO</th>
+          <th class="p-2 text-left">NAMA</th>
+          <th class="p-2 text-right">JUMLAH HARI</th>
+          <th class="p-2 text-right">UPAH RATE</th>
+          <th class="p-2 text-right">TOTAL VOLUME</th>
+          <th class="p-2 text-right">UPAH TERBAYAR</th>
+          <th class="p-2 text-right">NILAI OPNAME</th>
+          <th class="p-2 text-right">SELISIH</th>
+         </tr>
+        </thead>
+        <tbody id="rekap-harian-body" class="text-red-100"></tbody>
+       </table>
+      </div>
+      <div class="border-t border-red-800 mt-4 pt-2 flex justify-end">
+       <div class="text-sm text-red-300">
+        <span class="font-semibold">TOTAL SELISIH PROYEK:</span> <span id="rekap-total-selisih" class="font-bold text-red-400">0</span>
+       </div>
+      </div>
+      <p id="rekap-harian-empty" class="text-red-400 text-center py-4 hidden">Belum ada data perhitungan</p>
+     </div>
+    </div>
+   </section>
+
+   <section id="section-grafik" class="hidden">
+    <div data-template-id="grafik-card" class="canva-card rounded-xl p-6">
+     <h2 class="canva-text font-bold text-xl mb-4 text-red-100">Grafik Trend Progres Mingguan</h2>
+     <div class="flex flex-wrap gap-3 mb-4">
+      <select id="grafik-nama" onchange="renderGrafik()" class="rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 text-sm">
+        <option value="">Semua Pekerja</option>
+      </select>
+     </div>
+     <canvas id="chart-canvas" class="w-full bg-red-950/20 rounded-lg p-2" height="300"></canvas>
+     <p id="grafik-empty" class="text-red-400 text-center py-6 hidden">Belum ada data progres untuk ditampilkan</p>
+    </div>
+   </section>
+
+   <section id="section-pengaturan" class="hidden">
+    <div data-template-id="pengaturan-card" class="canva-card rounded-xl p-6">
+     <h2 class="canva-text text-xl font-bold mb-6 text-red-100">Konfigurasi Parameter Referensi</h2>
+     
+     <div class="mb-8">
+      <h3 class="canva-text font-semibold text-lg mb-3 text-red-300">Daftar Induk Pekerja</h3>
+      <div class="overflow-x-auto mb-4">
+       <table class="w-full text-sm">
+        <thead>
+         <tr class="border-b border-red-800 text-red-300 bg-red-950/50">
+          <th class="p-2 text-left">No</th>
+          <th class="p-2 text-left">Nama Pekerja</th>
+          <th class="p-2 text-left">Sistem Base</th>
+          <th class="p-2 text-right">Standard Upah (Rp)</th>
+          <th class="p-2 text-center">Aksi</th>
+         </tr>
+        </thead>
+        <tbody id="workers-body" class="text-red-100"></tbody>
+       </table>
+      </div>
+      <p id="workers-empty" class="text-red-400 text-center py-4 hidden">Belum ada data master pekerja</p>
+      
+      <div class="border-t border-red-800 pt-4 mt-4">
+       <h4 class="canva-text font-semibold mb-3 text-red-400">Tambah / Perbarui Akun Pekerja</h4>
+       <form id="worker-form" class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit="handleWorkerSubmit(event)">
+        <input type="hidden" id="worker-id">
+        <div>
+         <input id="worker-nama" type="text" placeholder="Nama Pekerja" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <select id="worker-status" class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+           <option value="Harian">Harian</option>
+           <option value="Borongan">Borongan</option>
+           <option value="Tetap">Tetap</option>
+         </select>
+        </div>
+        <div>
+         <input id="worker-upah" type="number" placeholder="Nominal Upah Standar" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div class="flex items-end">
+         <button id="worker-save-btn" type="submit" class="w-full bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-bold transition">Simpan Pekerja</button>
+        </div>
+       </form>
+       <div id="worker-msg" class="mt-3 text-center text-sm hidden"></div>
+      </div>
+     </div>
+
+     <div>
+      <h3 class="canva-text font-semibold text-lg mb-3 text-red-300">Daftar Standar Harga Satuan Pekerjaan</h3>
+      <div class="overflow-x-auto mb-4">
+       <table class="w-full text-sm">
+        <thead>
+         <tr class="border-b border-red-800 text-red-300 bg-red-950/50">
+          <th class="p-2 text-left">No</th>
+          <th class="p-2 text-left">Item Pekerjaan</th>
+          <th class="p-2 text-left">Satuan</th>
+          <th class="p-2 text-left">Nama Proyek</th>
+          <th class="p-2 text-right">Target /Hari</th>
+          <th class="p-2 text-right">Harga Satuan (Rp)</th>
+          <th class="p-2 text-center">Aksi</th>
+         </tr>
+        </thead>
+        <tbody id="settings-body" class="text-red-100"></tbody>
+       </table>
+      </div>
+      <p id="settings-empty" class="text-red-400 text-center py-4 hidden">Belum ada data acuan pekerjaan</p>
+      
+      <div class="border-t border-red-800 pt-4 mt-4">
+       <h4 class="canva-text font-semibold mb-3 text-red-400">Tambah / Perbarui Standar Pekerjaan</h4>
+       <form id="settings-form" class="grid grid-cols-1 md:grid-cols-2 gap-4" onsubmit="handleSettingSubmit(event)">
+        <input type="hidden" id="set-id">
+        <div>
+         <input id="set-proyek" type="text" placeholder="Nama Proyek (cth: Omah Songo)" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <input id="set-pekerjaan" type="text" placeholder="Deskripsi Pekerjaan (cth: Pasang Bata)" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <input id="set-satuan" type="text" placeholder="Satuan (m², m³, kg)" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <input id="set-target" type="number" step="0.01" placeholder="Target Volume Harian" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div>
+         <input id="set-harga" type="number" placeholder="Harga Satuan Borong/Opname" required class="w-full rounded-lg bg-red-950 border border-red-700 text-red-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+        <div class="flex items-end">
+         <button id="settings-save-btn" type="submit" class="w-full bg-red-700 hover:bg-red-600 text-white py-2 rounded-lg font-bold transition">Simpan Acuan Kerja</button>
+        </div>
+       </form>
+       <div id="settings-msg" class="mt-3 text-center text-sm hidden"></div>
+      </div>
+     </div>
+
+    </div>
+   </section>
+  </main>
+
+  <div id="limit-warning" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg">
+   Batas maksimum 999 data tercapai!
+  </div>
+
+  <script src="/_sdk/editing_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script>
+    let allData = [];
+    let currentTab = 'form';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateRekapTitle();
+      allData = [
+        { __backendId: 'w1', keterangan: 'setting', status_pekerja: 'worker', nama_pekerja: 'Budi', jenis_pekerjaan: 'Harian', upah: 150000 },
+        { __backendId: 'w2', keterangan: 'setting', status_pekerja: 'worker', nama_pekerja: 'Andi', jenis_pekerjaan: 'Borongan', upah: 0 },
+        { __backendId: 'j1', keterangan: 'setting', status_pekerja: 'job', jenis_pekerjaan: 'Plesteran Dinding', satuan: 'm²', nama_pekerja: 'Omah Songo', opname_harian: 10, upah: 20000 },
+        { __backendId: 'j2', keterangan: 'setting', status_pekerja: 'job', jenis_pekerjaan: 'Pasang Kramik', satuan: 'm²', nama_pekerja: 'Omah Songo', opname_harian: 8, upah: 35000 },
+        { __backendId: 'm1', tanggal: '2026-06-18', nama_pekerja: 'Budi', jenis_pekerjaan: 'Plesteran Dinding', upah: 150000, opname_harian: 12, keterangan: 'Lancar' }
+      ];
+      updateFilters();
+      renderFormMonitoringData();
+      lucide.createIcons();
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      ['form','rekap','grafik','pengaturan'].forEach(t => {
+        document.getElementById('section-' + t).classList.toggle('hidden', t !== tab);
+        document.getElementById('tab-' + t).className = (t === tab ? 'tab-active' : 'tab-inactive') + ' px-4 py-2 rounded-lg font-semibold transition';
+      });
+      if (tab === 'rekap') renderRekapHarian();
+      if (tab === 'grafik') renderGrafik();
+      if (tab === 'pengaturan') renderSettings();
+    }
+
+    function updateRekapTitle() {
+      const titleEl = document.getElementById('rekap-harian-title');
+      if(titleEl) titleEl.textContent = 'Rekapitulasi Perhitungan Efisiensi Tenaga Kerja';
+    }
+
+    function getMonitoring() { return allData.filter(d => d.keterangan !== 'setting'); }
+    function getSettings() { return allData.filter(d => d.keterangan === 'setting'); }
+
+    function getWeek(dateStr) {
+      const d = new Date(dateStr);
+      const start = new Date(d.getFullYear(), 0, 1);
+      const days = Math.floor((d - start) / 86400000);
+      return d.getFullYear() + '-W' + String(Math.ceil((days + 1) / 7)).padStart(2, '0');
+    }
+
+    function updateFilters() {
+      const settings = getSettings();
+      
+      const workers = [...new Set(settings.filter(s => s.status_pekerja === 'worker').map(s => s.nama_pekerja).filter(Boolean))].sort();
+      const namaSel = document.getElementById('inp-nama');
+      if (namaSel) {
+        const namaVal = namaSel.value;
+        namaSel.innerHTML = '<option value="">Pilih Nama Pekerja</option>' + workers.map(w => `<option value="${w}">${w}</option>`).join('');
+        namaSel.value = namaVal;
+      }
+      
+      const jobTypes = [...new Set(settings.filter(s => s.status_pekerja === 'job').map(s => s.jenis_pekerjaan).filter(Boolean))].sort();
+      const pekerjaanSel = document.getElementById('inp-pekerjaan');
+      if (pekerjaanSel) {
+        const currentVal = pekerjaanSel.value;
+        pekerjaanSel.innerHTML = '<option value="">Pilih Pekerjaan</option>' + jobTypes.map(j => `<option value="${j}">${j}</option>`).join('');
+        pekerjaanSel.value = currentVal;
+      }
+      
+      const names = [...new Set(getMonitoring().map(d => d.nama_pekerja).filter(Boolean))].sort();
+      const grafikSel = document.getElementById('grafik-nama');
+      if (grafikSel) {
+        const grafikVal = grafikSel.value;
+        grafikSel.innerHTML = '<option value="">Semua Pekerja</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+        grafikSel.value = grafikVal;
+      }
+    }
+
+    function handleWorkerSelection(workerName) {
+      const workerSetting = getSettings().find(s => s.status_pekerja === 'worker' && s.nama_pekerja === workerName);
+      if (workerSetting) {
+        document.getElementById('inp-status').value = workerSetting.jenis_pekerjaan || 'Harian';
+        document.getElementById('inp-upah').value = workerSetting.upah || 0;
+      }
+    }
+
+    function handleJobSelection(jobName) {
+      const jobSetting = getSettings().find(s => s.status_pekerja === 'job' && s.jenis_pekerjaan === jobName);
+      if (jobSetting) {
+        document.getElementById('inp-satuan').value = jobSetting.satuan || '';
+      }
+    }
+
+    function renderGrafik() {
+      const canvas = document.getElementById('chart-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const nama = document.getElementById('grafik-nama').value;
+      let filtered = getMonitoring();
+      if (nama) filtered = filtered.filter(d => d.nama_pekerja === nama);
+      
+      const weekly = {};
+      filtered.forEach(d => { const w = getWeek(d.tanggal); weekly[w] = (weekly[w] || 0) + (d.opname_harian || 0); });
+      const labels = Object.keys(weekly).sort();
+      const values = labels.map(l => weekly[l]);
+      const empty = document.getElementById('grafik-empty');
+      
+      if (!labels.length) { 
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        empty.classList.remove('hidden'); 
+        return; 
+      }
+      empty.classList.add('hidden');
+      
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = 300 * dpr;
+      ctx.scale(dpr, dpr);
+      const W = canvas.offsetWidth, H = 300;
+      ctx.clearRect(0, 0, W, H);
+      const max = Math.max(...values, 1);
+      const barW = Math.min(40, (W - 60) / labels.length - 4);
+      const startX = 50;
+      
+      ctx.fillStyle = '#fca5a5'; ctx.font = '11px DM Sans'; ctx.textAlign = 'right';
+      for (let i = 0; i <= 4; i++) { 
+        const y = 20 + (H - 50) * (1 - i / 4); 
+        ctx.fillText((max * i / 4).toFixed(1), 44, y + 4); 
+        ctx.strokeStyle = '#4c0519'; ctx.beginPath(); ctx.moveTo(50, y); ctx.lineTo(W - 10, y); ctx.stroke(); 
+      }
+      
+      ctx.textAlign = 'center';
+      labels.forEach((l, i) => { 
+        const x = startX + i * ((W - 60) / labels.length) + barW / 2; 
+        const barH = (values[i] / max) * (H - 50); 
+        const y = H - 30 - barH; 
+        ctx.fillStyle = '#dc2626'; ctx.fillRect(x - barW / 2, y, barW, barH); 
+        ctx.fillStyle = '#fca5a5'; ctx.font = '9px DM Sans'; 
+        ctx.fillText(l.split('-W')[1] ? 'W' + l.split('-W')[1] : l, x, H - 14); 
+        ctx.fillText(values[i].toFixed(1), x, y - 4); 
+      });
+    }
+
+    function renderSettings() {
+      const workers = getSettings().filter(s => s.status_pekerja === 'worker');
+      const jobs = getSettings().filter(s => s.status_pekerja === 'job');
+      
+      const workersBody = document.getElementById('workers-body');
+      const workersEmpty = document.getElementById('workers-empty');
+      if (!workers.length) { 
+        workersBody.innerHTML = ''; 
+        workersEmpty.classList.remove('hidden'); 
+      } else { 
+        workersEmpty.classList.add('hidden');
+        workersBody.innerHTML = workers.map((w, i) => `<tr class="border-b border-red-900/50"><td class="p-2">${i + 1}</td><td class="p-2 font-semibold">${w.nama_pekerja || ''}</td><td class="p-2">${w.jenis_pekerjaan || 'Harian'}</td><td class="p-2 text-right text-green-400">Rp ${(w.upah || 0).toLocaleString('id-ID')}</td><td class="p-2 text-center flex gap-4 justify-center"><button onclick="editWorker('${w.__backendId}')" class="text-blue-400 hover:text-blue-200"><i data-lucide="pencil" style="width:16px;height:16px"></i></button><button onclick="deleteData('${w.__backendId}')" class="text-red-400 hover:text-red-200"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button></td></tr>`).join('');
+      }
+      
+      const jobsBody = document.getElementById('settings-body');
+      const jobsEmpty = document.getElementById('settings-empty');
+      if (!jobs.length) { 
+        jobsBody.innerHTML = ''; 
+        jobsEmpty.classList.remove('hidden'); 
+      } else { 
+        jobsEmpty.classList.add('hidden');
+        jobsBody.innerHTML = jobs.map((j, i) => `<tr class="border-b border-red-900/50"><td class="p-2">${i + 1}</td><td class="p-2 font-semibold">${j.jenis_pekerjaan || ''}</td><td class="p-2">${j.satuan || '—'}</td><td class="p-2">${j.nama_pekerja || '—'}</td><td class="p-2 text-right">${j.opname_harian || 0}</td><td class="p-2 text-right text-green-400">Rp ${(j.upah || 0).toLocaleString('id-ID')}</td><td class="p-2 text-center flex gap-4 justify-center"><button onclick="editSetting('${j.__backendId}')" class="text-blue-400 hover:text-blue-200"><i data-lucide="pencil" style="width:16px;height:16px"></i></button><button onclick="deleteData('${j.__backendId}')" class="text-red-400 hover:text-red-200"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button></td></tr>`).join('');
+      }
+      lucide.createIcons();
+    }
+
+    function renderRekapHarian() {
+      const monitoring = getMonitoring();
+      const settings = getSettings();
+      const tbody = document.getElementById('rekap-harian-body');
+      const empty = document.getElementById('rekap-harian-empty');
+      
+      const byPekerja = {};
+      monitoring.forEach(m => {
+        if (!byPekerja[m.nama_pekerja]) {
+          byPekerja[m.nama_pekerja] = { hari: 0, upahPerEntry: 0, upahTotal: 0, volume: 0, pekerjaan: m.jenis_pekerjaan };
+        }
+        byPekerja[m.nama_pekerja].hari += 1;
+        byPekerja[m.nama_pekerja].upahPerEntry = (m.upah || 0);
+        byPekerja[m.nama_pekerja].upahTotal += (m.upah || 0);
+        byPekerja[m.nama_pekerja].volume += (m.opname_harian || 0);
+      });
+      
+      const rows = Object.entries(byPekerja).map(([nama, data]) => {
+        const setting = settings.find(s => s.status_pekerja === 'job' && s.jenis_pekerjaan === data.pekerjaan);
+        const hargaOpname = setting ? (data.volume * (setting.upah || 0)) : 0;
+        const selisih = hargaOpname - data.upahTotal;
+        const targetPerDay = setting ? (setting.opname_harian || 0) : 0;
+        const targetAkumulasi = targetPerDay * data.hari;
+        let volumeColor = 'text-gray-400';
+        if (targetAkumulasi > 0) {
+          if (Math.abs(data.volume - targetAkumulasi) < 0.01) volumeColor = 'text-yellow-400';
+          else if (data.volume < targetAkumulasi) volumeColor = 'text-red-400';
+          else volumeColor = 'text-green-400';
+        }
+        return { nama, hari: data.hari, upahPerEntry: data.upahPerEntry, upahTotal: data.upahTotal, volume: data.volume, pekerjaan: data.pekerjaan, hargaOpname, selisih, targetAkumulasi, volumeColor };
+      }).sort((a, b) => a.nama.localeCompare(b.nama));
+      
+      if (!rows.length) { 
+        tbody.innerHTML = ''; 
+        empty.classList.remove('hidden'); 
+        document.getElementById('rekap-total-selisih').textContent = 'Rp 0';
+        return; 
+      }
+      empty.classList.add('hidden');
+      
+      const totalSelisih = rows.reduce((sum, r) => sum + r.selisih, 0);
+      tbody.innerHTML = rows.map((r, i) => {
+        let badge = '';
+        if (r.targetAkumulasi > 0) {
+          if (Math.abs(r.volume - r.targetAkumulasi) < 0.01) {
+            badge = '<span class="inline-block bg-yellow-600 text-yellow-100 px-1.5 py-0.5 rounded text-xs font-semibold mr-1">✓ Target</span>';
+          } else if (r.volume < r.targetAkumulasi) {
+            badge = '<span class="inline-block bg-red-600 text-red-100 px-1.5 py-0.5 rounded text-xs font-semibold mr-1">✗ Kurang</span>';
+          } else {
+            badge = '<span class="inline-block bg-green-600 text-green-100 px-1.5 py-0.5 rounded text-xs font-semibold mr-1">✓ Lebih</span>';
+          }
+        }
+        return `<tr class="border-b border-red-900/50"><td class="p-2">${i + 1}</td><td class="p-2 font-semibold">${r.nama}</td><td class="p-2 text-right">${r.hari}</td><td class="p-2 text-right">Rp ${r.upahPerEntry.toLocaleString('id-ID')}</td><td class="p-2 text-right"><div>${badge}<span class="${r.volumeColor} font-bold">${r.volume.toFixed(2)}</span></div></td><td class="p-2 text-right">Rp ${r.upahTotal.toLocaleString('id-ID')}</td><td class="p-2 text-right text-blue-400">Rp ${r.hargaOpname.toLocaleString('id-ID')}</td><td class="p-2 text-right ${r.selisih >= 0 ? 'text-green-400' : 'text-red-400'}">Rp ${r.selisih.toLocaleString('id-ID')}</td></tr>`;
+      }).join('');
+      
+      const totalSpan = document.getElementById('rekap-total-selisih');
+      totalSpan.textContent = (totalSelisih >= 0 ? '+ Rp ' : '- Rp ') + Math.abs(totalSelisih).toLocaleString('id-ID');
+      totalSpan.className = 'font-bold ' + (totalSelisih >= 0 ? 'text-green-400' : 'text-red-400');
+    }
+
+    function renderFormMonitoringData() {
+      const monitoring = getMonitoring();
+      const tbody = document.getElementById('form-monitoring-body');
+      const empty = document.getElementById('form-monitoring-empty');
+      
+      if (!monitoring.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+      
+      tbody.innerHTML = monitoring.map((m, i) => `<tr class="border-b border-red-900/50"><td class="p-2">${i + 1}</td><td class="p-2">${m.tanggal}</td><td class="p-2 font-semibold">${m.nama_pekerja || ''}</td><td class="p-2">${m.jenis_pekerjaan || ''}</td><td class="p-2 text-right">Rp ${(m.upah || 0).toLocaleString('id-ID')}</td><td class="p-2 text-right font-medium">${(m.opname_harian || 0).toFixed(2)}</td><td class="p-2 text-center flex gap-2 justify-center"><button onclick="duplicateMonitoring('${m.__backendId}')" class="text-green-400 hover:text-green-200" title="Duplikat"><i data-lucide="copy" style="width:16px;height:16px"></i></button><button onclick="editMonitoring('${m.__backendId}')" class="text-blue-400 hover:text-blue-200" title="Ubah"><i data-lucide="pencil" style="width:16px;height:16px"></i></button><button onclick="deleteData('${m.__backendId}')" class="text-red-400 hover:text-red-200" title="Hapus"><i data-lucide="trash-2" style="width:16px;height:16px"></i></button></td></tr>`).join('');
+      lucide.createIcons();
+    }
+
+    function duplicateMonitoring(id) {
+      const record = allData.find(d => d.__backendId === id && d.keterangan !== 'setting');
+      if (!record) return;
+      document.getElementById('inp-id').value = ''; 
+      document.getElementById('inp-tanggal').value = record.tanggal || '';
+      document.getElementById('inp-nama').value = record.nama_pekerja || '';
+      document.getElementById('inp-status').value = record.status || 'Harian';
+      document.getElementById('inp-upah').value = record.upah || 0;
+      document.getElementById('inp-pekerjaan').value = record.jenis_pekerjaan || '';
+      document.getElementById('inp-opname').value = record.opname_harian || 0;
+      document.getElementById('inp-keterangan').value = (record.keterangan || '') + ' (Duplikat)';
+      
+      handleJobSelection(record.jenis_pekerjaan);
+      
+      const msgEl = document.getElementById('form-msg');
+      msgEl.textContent = 'Data log berhasil disalin ke form input!';
+      msgEl.className = 'mt-3 text-center text-sm text-yellow-400 block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function editMonitoring(id) {
+      const record = allData.find(d => d.__backendId === id);
+      if (!record) return;
+      document.getElementById('inp-id').value = record.__backendId;
+      document.getElementById('inp-tanggal').value = record.tanggal;
+      document.getElementById('inp-nama').value = record.nama_pekerja;
+      document.getElementById('inp-status').value = record.status || 'Harian';
+      document.getElementById('inp-upah').value = record.upah;
+      document.getElementById('inp-pekerjaan').value = record.jenis_pekerjaan;
+      document.getElementById('inp-opname').value = record.opname_harian;
+      document.getElementById('inp-keterangan').value = record.keterangan;
+      handleJobSelection(record.jenis_pekerjaan);
+      
+      document.getElementById('submit-btn').textContent = 'Perbarui Data Monitor';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function handleMonitoringSubmit(e) {
+      e.preventDefault();
+      if(allData.length >= 999) { document.getElementById('limit-warning').classList.remove('hidden'); return; }
+      
+      const id = document.getElementById('inp-id').value;
+      const dataObj = {
+        tanggal: document.getElementById('inp-tanggal').value,
+        nama_pekerja: document.getElementById('inp-nama').value,
+        status: document.getElementById('inp-status').value,
+        upah: parseFloat(document.getElementById('inp-upah').value) || 0,
+        jenis_pekerjaan: document.getElementById('inp-pekerjaan').value,
+        opname_harian: parseFloat(document.getElementById('inp-opname').value) || 0,
+        keterangan: document.getElementById('inp-keterangan').value || 'Maju'
+      };
+
+      if (id) {
+        const index = allData.findIndex(d => d.__backendId === id);
+        if (index !== -1) allData[index] = { ...allData[index], ...dataObj };
+      } else {
+        dataObj.__backendId = 'm_' + Date.now();
+        allData.push(dataObj);
+      }
+
+      document.getElementById('monitoring-form').reset();
+      document.getElementById('inp-id').value = '';
+      document.getElementById('submit-btn').textContent = 'Simpan Data Monitor';
+      
+      updateFilters();
+      renderFormMonitoringData();
+      showFormMessage('form-msg', 'Data monitoring sukses disimpan!', 'text-green-400');
+    }
+
+    function handleWorkerSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('worker-id').value;
+      const wObj = {
+        keterangan: 'setting',
+        status_pekerja: 'worker',
+        nama_pekerja: document.getElementById('worker-nama').value,
+        jenis_pekerjaan: document.getElementById('worker-status').value,
+        upah: parseFloat(document.getElementById('worker-upah').value) || 0
+      };
+
+      if (id) {
+        const idx = allData.findIndex(d => d.__backendId === id);
+        if (idx !== -1) allData[idx] = { ...allData[idx], ...wObj };
+      } else {
+        wObj.__backendId = 'w_' + Date.now();
+        allData.push(wObj);
+      }
+
+      document.getElementById('worker-form').reset();
+      document.getElementById('worker-id').value = '';
+      document.getElementById('worker-save-btn').textContent = 'Simpan Pekerja';
+      renderSettings();
+      updateFilters();
+      showFormMessage('worker-msg', 'Master pekerja berhasil diperbarui!', 'text-green-400');
+    }
+
+    function handleSettingSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('set-id').value;
+      const jObj = {
+        keterangan: 'setting',
+        status_pekerja: 'job',
+        nama_proyek: document.getElementById('set-proyek').value,
+        nama_pekerja: document.getElementById('set-proyek').value, 
+        jenis_pekerjaan: document.getElementById('set-pekerjaan').value,
+        satuan: document.getElementById('set-satuan').value,
+        opname_harian: parseFloat(document.getElementById('set-target').value) || 0,
+        upah: parseFloat(document.getElementById('set-harga').value) || 0
+      };
+
+      if (id) {
+        const idx = allData.findIndex(d => d.__backendId === id);
+        if (idx !== -1) allData[idx] = { ...allData[idx], ...jObj };
+      } else {
+        jObj.__backendId = 'j_' + Date.now();
+        allData.push(jObj);
+      }
+
+      document.getElementById('settings-form').reset();
+      document.getElementById('set-id').value = '';
+      document.getElementById('settings-save-btn').textContent = 'Simpan Acuan Kerja';
+      renderSettings();
+      updateFilters();
+      showFormMessage('settings-msg', 'Master acuan kerja disimpan!', 'text-green-400');
+    }
+
+    function editWorker(id) {
+      const record = allData.find(d => d.__backendId === id);
+      if(!record) return;
+      document.getElementById('worker-id').value = record.__backendId;
+      document.getElementById('worker-nama').value = record.nama_pekerja;
+      document.getElementById('worker-status').value = record.jenis_pekerjaan;
+      document.getElementById('worker-upah').value = record.upah;
+      document.getElementById('worker-save-btn').textContent = 'Perbarui Pekerja';
+    }
+
+    document.getElementById('worker-form').reset();
+
+    function editSetting(id) {
+      const record = allData.find(d => d.__backendId === id);
+      if(!record) return;
+      document.getElementById('set-id').value = record.__backendId;
+      document.getElementById('set-proyek').value = record.nama_proyek || record.nama_pekerja || '';
+      document.getElementById('set-pekerjaan').value = record.jenis_pekerjaan;
+      document.getElementById('set-satuan').value = record.satuan;
+      document.getElementById('set-target').value = record.opname_harian;
+      document.getElementById('set-harga').value = record.upah;
+      document.getElementById('settings-save-btn').textContent = 'Perbarui Acuan';
+    }
+
+    function deleteData(id) {
+      if(confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+        allData = allData.filter(d => d.__backendId !== id);
+        updateFilters();
+        renderFormMonitoringData();
+        renderSettings();
+        renderRekapHarian();
+      }
+    }
+
+    function showFormMessage(elementId, text, className) {
+      const el = document.getElementById(elementId);
+      if(!el) return;
+      el.textContent = text;
+      el.className = `mt-3 text-center text-sm ${className} block`;
+      setTimeout(() => { el.classList.add('hidden'); }, 3000);
+    }
+
+    // ==========================================
+    // FUNGSI UTAMA EXPORT EXCEL (SHEETJS)
+    // ==========================================
+    
+    // 1. Export Data Log Harian Realisasi Lapangan
+    function exportRealisasiToExcel() {
+      const monitoringData = getMonitoring();
+      if (monitoringData.length === 0) {
+        alert("Tidak ada data monitoring untuk diexport!");
+        return;
+      }
+
+      // Pemetaan header kolom Excel Bahasa Indonesia yang rapi
+      const rows = monitoringData.map((m, idx) => ({
+        "No": idx + 1,
+        "Tanggal": m.tanggal,
+        "Nama Pekerja": m.nama_pekerja,
+        "Sistem Bayar": m.status || "Harian",
+        "Jenis Pekerjaan": m.jenis_pekerjaan,
+        "Upah Terbayar (Rp)": m.upah,
+        "Volume Opname": m.opname_harian,
+        "Catatan Lapangan": m.keterangan
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Log Realisasi Harian");
+      
+      // Mengunduh File Excel secara otomatis
+      XLSX.writeFile(workbook, "Omah_Songo_Monitoring_Realisasi_" + new Date().toISOString().slice(0,10) + ".xlsx");
+    }
+
+    // 2. Export Data Rekapitulasi Efisiensi Per Pekerja
+    function exportRekapToExcel() {
+      const monitoring = getMonitoring();
+      const settings = getSettings();
+      
+      const byPekerja = {};
+      monitoring.forEach(m => {
+        if (!byPekerja[m.nama_pekerja]) {
+          byPekerja[m.nama_pekerja] = { hari: 0, upahPerEntry: 0, upahTotal: 0, volume: 0, pekerjaan: m.jenis_pekerjaan };
+        }
+        byPekerja[m.nama_pekerja].hari += 1;
+        byPekerja[m.nama_pekerja].upahPerEntry = (m.upah || 0);
+        byPekerja[m.nama_pekerja].upahTotal += (m.upah || 0);
+        byPekerja[m.nama_pekerja].volume += (m.opname_harian || 0);
+      });
+
+      const records = Object.entries(byPekerja).map(([nama, data], idx) => {
+        const setting = settings.find(s => s.status_pekerja === 'job' && s.jenis_pekerjaan === data.pekerjaan);
+        const hargaOpname = setting ? (data.volume * (setting.upah || 0)) : 0;
+        const selisih = hargaOpname - data.upahTotal;
+        return {
+          "No": idx + 1,
+          "Nama Pekerja": nama,
+          "Jumlah Hari Kerja": data.hari,
+          "Upah Harian Standar (Rp)": data.upahPerEntry,
+          "Total Akumulasi Volume": data.volume,
+          "Total Upah Terbayar (Rp)": data.upahTotal,
+          "Nilai Konversi Opname (Rp)": hargaOpname,
+          "Selisih Keuntungan Proyek (Rp)": selisih
+        };
+      });
+
+      if (records.length === 0) {
+        alert("Tidak ada data perhitungan rekap untuk diexport!");
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(records);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Efisiensi Tenaga");
+
+      XLSX.writeFile(workbook, "Omah_Songo_Rekap_Biaya_Tenaga_" + new Date().toISOString().slice(0,10) + ".xlsx");
+    }
+  </script>
+ </body>
+</html>
